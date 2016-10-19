@@ -1,8 +1,11 @@
 package driver;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -47,7 +50,32 @@ public class FlowDriver {
 		//set output key and value class
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(FlowBean.class);
+		
+		//Can set partitioning rules so that keys can be separated into different reducers
+		job.setPartitionerClass(new org.apache.hadoop.mapreduce.Partitioner<Text, FlowBean>() {
+			//When return 1, it will be put to the 1st reducer
+			//If return 2, it will be put to the 2nd reducer, etc
+			@Override
+			public int getPartition(Text key, FlowBean value, int numPartitions) {
+				if (key.toString().equals("1")) {
+					return 1;
+				} else if (key.toString().equals("2")) {
+					return 2;
+				} else {
+					return 0;
+				}
+			}
 
+		}.getClass());
+		//Can set number of reducers.
+		job.setNumReduceTasks(6);
+		
+		//Delete output file if exists
+		Path path = new Path("/path/you/want/to/output");
+		FileSystem fs = FileSystem.get(conf);
+		if (fs.exists(path)) {
+			fs.delete(path, true);
+		}
 		//set input and output paths, the output path must not exists
 		FileInputFormat.setInputPaths(job, new Path("/path/to/input"));
 		FileOutputFormat.setOutputPath(job, new Path("/path/you/want/to/output"));
