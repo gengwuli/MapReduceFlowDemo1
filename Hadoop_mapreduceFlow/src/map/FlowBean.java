@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
+//FlowBean must implements WritableComparable for 
+//the mapreduce to know how to write out and read in values
 public class FlowBean implements WritableComparable<FlowBean> {
 
 	long upFlow;
@@ -19,6 +21,7 @@ public class FlowBean implements WritableComparable<FlowBean> {
 		out.writeLong(upFlow + downFlow);
 	}
 
+	//Read in the order of the write
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		this.upFlow = in.readLong();
@@ -26,6 +29,7 @@ public class FlowBean implements WritableComparable<FlowBean> {
 		this.sumFlow = in.readLong();
 	}
 
+	//Compare for sorting
 	@Override
 	public int compareTo(FlowBean o) {
 		return this.sumFlow > o.getSumFlow() ? -1 : 1;
@@ -41,6 +45,7 @@ public class FlowBean implements WritableComparable<FlowBean> {
 		this.sumFlow = upFlow + downFlow;
 	}
 
+	//To string for output to write it to files.
 	@Override
 	public String toString() {
 		return upFlow + "\t" + downFlow + "\t" + sumFlow;

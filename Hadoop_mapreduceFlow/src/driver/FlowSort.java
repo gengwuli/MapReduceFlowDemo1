@@ -37,22 +37,27 @@ public class FlowSort {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(NullWritable.class);
 
-		FileInputFormat.setInputPaths(job, new Path("/Users/gengwuli/output"));
-		FileOutputFormat.setOutputPath(job, new Path("/Users/gengwuli/sortoutput"));
+		FileInputFormat.setInputPaths(job, new Path("/path/in/last/output"));
+		FileOutputFormat.setOutputPath(job, new Path("/path/you/want/to/sortoutput"));
 
 		boolean status = job.waitForCompletion(true);
 		System.exit(status ? 0 : 1);
 	}
 }
 
+//LongWritable is the offset of the first character in each line, Text is the every input line
+//FlowBean is the output key, Text is the output value
 class FlowSortMapper extends Mapper<LongWritable, Text, FlowBean, Text> {
 	FlowBean k = new FlowBean();
 	Text v = new Text();
 	@Override
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+		//split must be "\\\t" instead of "\t"
 		String[] split = value.toString().split("\\\t");
 		int len = split.length;
+		//fetch the download and upload flow
 		k.set(Long.parseLong(split[len - 2]), Long.parseLong(split[len - 3]));
+		//write to context, k will be sorted
 		context.write(k, value);
 	}
 }
